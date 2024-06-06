@@ -82,7 +82,7 @@ done
 # Function to truncate collected metric data file
 # syntax: trunc <filename>
 trunc() {
-    MAX_SIZE=$(( 100*1024*1024 ))
+    MAX_SIZE=$(( 1*1024*1024 )) # 1 MB
     while [[ -f "$1" ]]; do
         file_size=$(stat -c%s "$1")
         if [[ "$file_size" -ge "$MAX_SIZE" ]]; then
@@ -93,7 +93,7 @@ trunc() {
 }
 # Read the log
 if [[ -e "$runtime_counter_log_file" ]]; then
-    # Start a script to monitor the size of $runtime_counter_log_file & truncate it at 100 MB
+    # Start a thread to monitor the size of $runtime_counter_log_file & truncate it
     trunc "$runtime_counter_log_file" &
     # Reading metric data in $runtime_counter_log_file to extract threadcount information
     tail -f "$runtime_counter_log_file" | while read -r line; do
