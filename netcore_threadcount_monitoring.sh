@@ -7,7 +7,7 @@
 # 28 May 2024
 script_name=${0##*/}
 function usage() {
-    echo "###Syntax: $script_name -t <threshold> -i <instance name>"
+    echo "###Syntax: $script_name -t <threshold>"
     echo "- You must specify instance name so that logs are written to separate folders for each instance."
     echo "- Without specifying -t <threshold>, the default will be 100 threads."
     echo "###Threshold: when the number of threads exceeds the threshold value in the working instance, the script will automatically take a memory dump for that instance."
@@ -16,13 +16,17 @@ function die() {
     echo "$1" >&2
     exit $2
 }
-while getopts ":t:i:hc" opt; do
+function getcomputername()
+{
+    # $1-pid
+    instance=$(cat "/proc/$1/environ" | tr '\0' '\n' | grep -w COMPUTERNAME)
+    instance=${instance#*=}
+    echo "$instance"
+}
+while getopts ":t:hc" opt; do
     case $opt in
         t)
            threshold=$OPTARG
-           ;;
-        i)
-           instance=$OPTARG
            ;;
         h)
            usage
@@ -47,10 +51,6 @@ if [[ "$clean_flag" -eq 1 ]]; then
     echo "Completed"
     exit 0
 fi
-# Specify the name of the instance which the script is running inside
-if [[ -z "$instance" ]]; then
-    die "###Critical: You must specify instance name using the option -i, e.g: -i <instance name>" 1
-fi
 # Define default threshold value for the number of threads
 if [[ -z "$threshold" ]]; then
     echo "###Info: If not specify the option -t <threshold>, the script will set the default threshold of thread counts to 100"
@@ -60,6 +60,11 @@ fi
 pid=$(/tools/dotnet-dump ps | grep /usr/share/dotnet/dotnet | grep -v grep | tr -s " " | cut -d" " -f2)
 if [ -z "$pid" ]; then
   die "There is no .NET process running" 1
+fi
+# Get the computer name from /proc/PID/environ, where PID is .net core process's pid
+instance=$(getcomputername "$pid")
+if [[ -z "$instance" ]]; then
+    die "Cannot find the environment variable of COMPUTERNAME" >&2 1
 fi
 # Output dir is named after instance name
 output_dir="threadcount-logs-$instance"
