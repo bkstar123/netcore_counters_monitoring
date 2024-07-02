@@ -128,9 +128,9 @@ if [[ -e "$runtime_counter_log_file" ]]; then
                     echo "The number of thread counts exceed the threshold, collecting memory dump..." >> "$output_file"
                     echo "Acquiring lock..." >> "$output_file" && touch "$dump_lock_file" && echo "Memory dump is collected by $instance" >> "$dump_lock_file"
                     /tools/dotnet-dump collect -p "$pid" -o "$dump_file" > /dev/null && \
-                       echo "$(date '+%Y-%m-%d %H:%M:%S'): Memmory dump has been collected. Uploading it to Azure Blob Container 'insights-logs-appserviceconsolelogs'" >> "$output_file" && \
+                       echo "Memmory dump has been collected. Uploading it to Azure Blob Container 'insights-logs-appserviceconsolelogs'" >> "$output_file" && \
                        /tools/azcopy copy "$dump_file" "$sas_url" > /dev/null && \
-                       echo "$(date '+%Y-%m-%d %H:%M:%S'): Memory dump has been uploaded to Azure Blob Container 'insights-logs-appserviceconsolelogs'" >> "$output_file" &
+                       echo "Memory dump has been uploaded to Azure Blob Container 'insights-logs-appserviceconsolelogs'" >> "$output_file" &
                 fi
             fi
         fi
